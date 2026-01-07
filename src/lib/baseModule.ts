@@ -24,9 +24,10 @@ export abstract class BaseModule<TContext extends BaseServerContext = BaseServer
         {
           title: tool.title,
           description: tool.description,
+          inputSchema: tool.inputSchema,
           outputSchema: tool.outputSchema
         },
-        tool.handler
+        tool.handler as any
       );
     });
   }

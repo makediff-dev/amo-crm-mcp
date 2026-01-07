@@ -1,4 +1,4 @@
-import { Logger } from '../../lib/logger';
+import { Logger } from '../../lib/logger/index';
 import { HealthService } from './health.service';
 import { HealthSnapshot, healthOutputSchema } from './health.schemas';
 import { BaseController, Tool, ToolResult } from '../../lib/baseController';
@@ -22,7 +22,7 @@ export class HealthController extends BaseController {
   private getHealth(): ToolResult<HealthSnapshot> {
     const snapshot = this.service.getSnapshot();
     return {
-      structuredContent: snapshot as unknown as Record<string, unknown>,
+      structuredContent: snapshot,
       content: [
         {
           type: 'text',

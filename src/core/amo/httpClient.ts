@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig } from 'axios';
 
 import { EnvConfig } from '../../config/env';
-import { Logger } from '../../lib/logger';
+import { Logger } from '../../lib/logger/index';
 import { ConcurrencyLimiter } from './concurrencyLimiter';
 
 export interface AmoRequestOptions {

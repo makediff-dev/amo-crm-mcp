@@ -3,8 +3,7 @@ import { AnySchema, ZodRawShapeCompat } from '@modelcontextprotocol/sdk/server/z
 import { Logger } from './logger';
 
 export interface ToolResult<T = unknown> {
-  [key: string]: unknown;
-  structuredContent?: Record<string, unknown>;
+  structuredContent?: T;
   content: Array<{ type: 'text'; text: string }>;
   isError?: boolean;
 }
@@ -13,8 +12,9 @@ export interface ToolDescriptor {
   name: string;
   title: string;
   description: string;
+  inputSchema?: AnySchema | ZodRawShapeCompat;
   outputSchema?: AnySchema | ZodRawShapeCompat;
-  handler: () => Promise<ToolResult> | ToolResult;
+  handler: (input?: unknown) => Promise<ToolResult> | ToolResult;
 }
 
 export type ToolConfig = Omit<ToolDescriptor, 'handler'> & {
@@ -40,12 +40,12 @@ export abstract class BaseController {
   protected constructor(protected readonly logger: Logger) {}
 
   protected wrapTool<T>(
-    fn: () => Promise<ToolResult<T>> | ToolResult<T>,
+    fn: (input?: unknown) => Promise<ToolResult<T>> | ToolResult<T>,
     options?: { errorLlmMessage?: string; errorLogMessage?: string }
-  ): () => Promise<ToolResult<T>> {
-    return async () => {
+  ): (input?: unknown) => Promise<ToolResult<T>> {
+    return async (input?: unknown) => {
       try {
-        return await fn();
+        return await fn(input);
       } catch (error) {
         this.logger.error(options?.errorLogMessage ?? 'Tool execution failed', error);
         return {
@@ -69,9 +69,10 @@ export abstract class BaseController {
       name: config.name,
       title: config.title,
       description: config.description,
+      inputSchema: config.inputSchema,
       outputSchema: config.outputSchema,
       handler: this.wrapTool(
-        () => (this as any)[propertyKey](),
+        (input?: unknown) => (this as any)[propertyKey](input),
         {
           errorLlmMessage: config.errorLlmMessage,
           errorLogMessage: config.errorLogMessage

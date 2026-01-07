@@ -1,6 +1,6 @@
 import { EnvConfig } from '../config/env';
 import { AmoService } from './amo';
-import { Logger } from '../lib/logger';
+import { Logger } from '../lib/logger/index';
 import { SingletonStorage } from '../lib/singletonStorage';
 import { BaseServerContext } from '../lib/baseContext';
 

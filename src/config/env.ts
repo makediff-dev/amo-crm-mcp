@@ -14,12 +14,20 @@ console.warn = originalWarn;
 
 const envSchema = z.object({
   LOG_LEVEL: z.string().optional(),
+  APP_TIMEZONE: z
+    .string()
+    .default('Europe/Moscow')
+    .describe('IANA timezone for date formatting (e.g., Europe/Moscow)'),
   AMO_MAX_CONCURRENCY: z
     .coerce.number()
     .int()
     .positive()
     .default(5)
     .describe('Максимальное число одновременных запросов к AmoCRM API'),
+  LOG_FILE_PATH: z
+    .string()
+    .optional()
+    .describe('Путь до файла логов (по умолчанию mcp.log в рабочей директории)'),
   AMO_BASE_URL: z
     .string()
     .url()
