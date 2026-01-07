@@ -1,4 +1,4 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp';
+import { McpServer, ToolCallback } from '@modelcontextprotocol/sdk/server/mcp';
 
 import { BaseServerContext } from './baseContext';
 import { ToolDescriptor } from './baseController';
@@ -27,7 +27,7 @@ export abstract class BaseModule<TContext extends BaseServerContext = BaseServer
           inputSchema: tool.inputSchema,
           outputSchema: tool.outputSchema
         },
-        tool.handler as any
+        tool.handler as ToolCallback
       );
     });
   }

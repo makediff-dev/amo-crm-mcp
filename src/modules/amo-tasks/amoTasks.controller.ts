@@ -2,28 +2,18 @@ import { AmoTasksService } from './amoTasks.service';
 import { tasksListResultSchema, TasksList } from './amoTasks.schemas';
 import { Logger } from '../../lib/logger/index';
 import { BaseController, Tool, ToolResult } from '../../lib/baseController';
+import { DateFormatter } from '../../core/dateFormatter';
 
 export class AmoTasksController extends BaseController {
+  private readonly dateFormatter: DateFormatter;
+
   constructor(
     private readonly service: AmoTasksService,
     logger: Logger,
-    private readonly timezone: string
+    timezone: string
   ) {
     super(logger);
-  }
-
-  private formatDate(timestamp?: number): string {
-    if (!timestamp) return 'без срока';
-    const date = new Date(timestamp * 1000);
-    return new Intl.DateTimeFormat('ru-RU', {
-      timeZone: this.timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).format(date);
+    this.dateFormatter = new DateFormatter(timezone, { emptyValue: 'без срока' });
   }
 
   @Tool({
@@ -39,7 +29,7 @@ export class AmoTasksController extends BaseController {
 
     const lines = tasks.map((task) => {
       const title = task.text?.trim() || 'без названия';
-      const due = this.formatDate(task.complete_till);
+      const due = this.dateFormatter.format(task.complete_till);
       const link =
         task.entity_type === 'leads'
           ? `лид #${task.entity_id}`

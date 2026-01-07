@@ -1,7 +1,6 @@
 import {
   leadsListResultSchema,
   singleLeadInputSchema,
-  singleLeadResultSchema,
   leadDetailsResultSchema,
   listLeadsInputSchema,
   LeadsListResult,
@@ -13,39 +12,29 @@ import {
 import { AmoLeadsService } from './amoLeads.service';
 import { Logger } from '../../lib/logger/index';
 import { BaseController, Tool, ToolResult } from '../../lib/baseController';
+import { DateFormatter } from '../../core/dateFormatter';
 
 export class AmoLeadsController extends BaseController {
+  private readonly dateFormatter: DateFormatter;
+
   constructor(
     private readonly service: AmoLeadsService,
     logger: Logger,
-    private readonly timezone: string
+    timezone: string
   ) {
     super(logger);
-  }
-
-  private formatDate(timestamp?: number): string {
-    if (!timestamp) return '—';
-    const date = new Date(timestamp * 1000);
-    return new Intl.DateTimeFormat('ru-RU', {
-      timeZone: this.timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).format(date);
+    this.dateFormatter = new DateFormatter(timezone);
   }
 
   private leadSummary(lead: Lead): string {
     const name = lead.name?.trim() || 'Без названия';
     const price = lead.price !== undefined ? `${lead.price}₽` : 'цена не указана';
-    const pipeline = lead.pipeline_id ? `pipeline ${lead.pipeline_id}` : 'pipeline не указан';
-    const status = lead.status_id ? `status ${lead.status_id}` : 'status не указан';
+    const pipeline = lead.pipeline_id ? `воронка ${lead.pipeline_id}` : 'воронка не указана';
+    const status = lead.status_id ? `этап ${lead.status_id}` : 'этап не указан';
     const responsible = lead.responsible_user_id
       ? `ответственный ${lead.responsible_user_id}`
       : 'ответственный не указан';
-    const created = `создано: ${this.formatDate(lead.created_at)}`;
+    const created = `создано: ${this.dateFormatter.format(lead.created_at)}`;
     return `#${lead.id}: ${name} (${price}; ${pipeline}; ${status}; ${responsible}; ${created})`;
   }
 
@@ -113,7 +102,7 @@ export class AmoLeadsController extends BaseController {
         : 'кастомные поля отсутствуют';
 
     const nearestTaskText = nearest_task
-      ? `Ближайшая задача: #${nearest_task.id} "${nearest_task.text ?? 'без названия'}", срок: ${this.formatDate(nearest_task.complete_till)}`
+      ? `Ближайшая задача: #${nearest_task.id} "${nearest_task.text ?? 'без названия'}", срок: ${this.dateFormatter.format(nearest_task.complete_till)}`
       : 'Ближайших незавершенных задач нет.';
 
     const text = [
@@ -122,9 +111,9 @@ export class AmoLeadsController extends BaseController {
       `Сумма: ${lead.price ?? 'не указана'}`,
       `Воронка: ${lead.pipeline_id ?? 'не указана'}, этап: ${lead.status_id ?? 'не указан'}`,
       `Ответственный: ${lead.responsible_user_id ?? 'не указан'}`,
-      `Создана: ${this.formatDate(lead.created_at)}`,
-      `Обновлена: ${this.formatDate(lead.updated_at)}`,
-      `Закрыта: ${this.formatDate(lead.closed_at ?? undefined)}`,
+      `Создана: ${this.dateFormatter.format(lead.created_at)}`,
+      `Обновлена: ${this.dateFormatter.format(lead.updated_at)}`,
+      `Закрыта: ${this.dateFormatter.format(lead.closed_at ?? undefined)}`,
       tags,
       `Кастомные поля:\n${customFields}`,
       nearestTaskText

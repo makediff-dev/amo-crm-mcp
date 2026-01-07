@@ -13,6 +13,11 @@ export class AmoPipelinesService {
       path: '/leads/pipelines'
     });
 
+    // AmoCRM returns 204 No Content (empty response) when there are no results
+    if (!data) {
+      return [];
+    }
+
     const parsed = amoPipelinesResponseSchema.parse(data);
 
     const pipelines = parsed._embedded.pipelines.map((pipeline) =>

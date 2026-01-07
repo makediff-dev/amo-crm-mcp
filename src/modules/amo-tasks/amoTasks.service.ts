@@ -1,9 +1,7 @@
 import { AmoService } from '../../core/amo';
 import {
-  AmoTask,
   amoTasksApiResponseSchema,
-  TasksList,
-  tasksListSchema
+  TasksList
 } from './amoTasks.schemas';
 
 export class AmoTasksService {
@@ -15,7 +13,12 @@ export class AmoTasksService {
       query: { 'filter[is_completed]': 0 }
     });
 
+    // AmoCRM returns 204 No Content (empty response) when there are no results
+    if (!data) {
+      return [];
+    }
+
     const parsed = amoTasksApiResponseSchema.parse(data);
-    return tasksListSchema.parse(parsed._embedded.tasks) as AmoTask[];
+    return parsed._embedded.tasks;
   }
 }

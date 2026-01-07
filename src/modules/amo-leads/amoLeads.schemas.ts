@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { taskSchema } from '../amo-tasks/amoTasks.schemas';
 
 export const leadTagSchema = z.object({
   id: z.number(),
@@ -42,21 +43,26 @@ export const leadsListResponseSchema = z.object({
   })
 });
 
-export const listLeadsInputSchema = z.object({
-  page: z.number().int().positive().optional(),
-  limit: z.number().int().positive().max(250).optional(),
-  pipeline_id: z.number().optional(),
-  status_id: z.number().optional(),
-  responsible_user_id: z.number().optional(),
-  query: z.string().optional(),
-  created_at_from: z.number().int().optional(),
-  created_at_to: z.number().int().optional(),
-  sort_by: z
-    .enum(['created_at', 'updated_at', 'id'])
-    .default('created_at')
-    .optional(),
-  sort_order: z.enum(['asc', 'desc']).default('desc').optional()
-});
+export const listLeadsInputSchema = z
+  .object({
+    page: z.number().int().positive().optional(),
+    limit: z.number().int().positive().max(250).optional(),
+    pipeline_id: z.number().optional(),
+    status_id: z.number().optional(),
+    responsible_user_id: z.number().optional(),
+    query: z.string().optional(),
+    created_at_from: z.number().int().optional(),
+    created_at_to: z.number().int().optional(),
+    sort_by: z
+      .enum(['created_at', 'updated_at', 'id'])
+      .default('created_at')
+      .optional(),
+    sort_order: z.enum(['asc', 'desc']).default('desc').optional()
+  })
+  .refine((data) => !(data.status_id !== undefined && data.pipeline_id === undefined), {
+    message: 'pipeline_id is required when filtering by status_id',
+    path: ['pipeline_id']
+  });
 
 export const leadsListResultSchema = z.object({
   leads: z.array(leadSchema)
@@ -72,13 +78,7 @@ export const singleLeadResultSchema = z.object({
 
 export const leadDetailsResultSchema = z.object({
   lead: leadSchema,
-  nearest_task: z
-    .object({
-      id: z.number(),
-      text: z.string().nullable().optional(),
-      complete_till: z.number().optional()
-    })
-    .optional()
+  nearest_task: taskSchema.pick({ id: true, text: true, complete_till: true }).optional()
 });
 
 export type Lead = z.infer<typeof leadSchema>;

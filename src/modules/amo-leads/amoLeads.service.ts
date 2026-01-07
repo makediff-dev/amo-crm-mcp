@@ -37,21 +37,21 @@ export class AmoLeadsService {
     if (input.created_at_to !== undefined) {
       params['filter[created_at][to]'] = input.created_at_to;
     }
-    if (input.sort_by) {
-      params.order = input.sort_by;
-    } else {
-      params.order = 'created_at';
-    }
-    if (input.sort_order) {
-      params.direction = input.sort_order;
-    } else {
-      params.direction = 'desc';
-    }
+
+    // AmoCRM API uses format: order[field]=asc|desc
+    const sortField = input.sort_by ?? 'created_at';
+    const sortOrder = input.sort_order ?? 'desc';
+    params[`order[${sortField}]`] = sortOrder;
 
     const data = await this.amoService.request({
       path: '/leads',
       query: params
     });
+
+    // AmoCRM returns 204 No Content (empty response) when there are no results
+    if (!data) {
+      return [];
+    }
 
     const parsed = leadsListResponseSchema.parse(data);
     return parsed._embedded.leads;

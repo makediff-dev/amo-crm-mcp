@@ -9,6 +9,7 @@ export class BaseServerApp<TContext extends BaseServerContext> {
   protected readonly server: McpServer;
   protected readonly transport: Transport;
   private shuttingDown = false;
+  private readonly boundShutdown: () => Promise<void>;
 
   constructor(
     protected readonly modules: ServerModule<TContext>[],
@@ -17,6 +18,7 @@ export class BaseServerApp<TContext extends BaseServerContext> {
   ) {
     this.transport = transport ?? new StdioServerTransport();
     this.server = this.createServer();
+    this.boundShutdown = this.shutdown.bind(this);
   }
 
   private createServer(): McpServer {
@@ -48,16 +50,22 @@ export class BaseServerApp<TContext extends BaseServerContext> {
     if (this.shuttingDown) return;
     this.shuttingDown = true;
     this.context.logger.info('Shutting down MCP server...');
+    this.removeSignalHandlers();
     await this.server.close();
   }
 
-  private registerSignalHandlers() {
-    const shutdown = async () => {
-      await this.stop();
-      process.exit(0);
-    };
+  private async shutdown(): Promise<void> {
+    await this.stop();
+    process.exit(0);
+  }
 
-    process.on('SIGINT', shutdown);
-    process.on('SIGTERM', shutdown);
+  private registerSignalHandlers(): void {
+    process.on('SIGINT', this.boundShutdown);
+    process.on('SIGTERM', this.boundShutdown);
+  }
+
+  private removeSignalHandlers(): void {
+    process.off('SIGINT', this.boundShutdown);
+    process.off('SIGTERM', this.boundShutdown);
   }
 }
