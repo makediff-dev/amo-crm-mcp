@@ -1,6 +1,6 @@
 import { AnySchema, ZodRawShapeCompat } from '@modelcontextprotocol/sdk/server/zod-compat';
 
-import { Logger } from './logger';
+import { Logger } from '../logger';
 
 export interface ToolResult<T = unknown> {
   structuredContent?: T;
@@ -53,7 +53,7 @@ export abstract class BaseController {
           content: [
             {
               type: 'text',
-              text: options?.errorLlmMessage ?? 'Произошла ошибка при выполнении инструмента.'
+              text: options?.errorLlmMessage ?? 'An error occurred while executing the tool.'
             }
           ]
         };

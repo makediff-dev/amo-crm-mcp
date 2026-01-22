@@ -1,4 +1,4 @@
-import { BaseModule } from '../../lib/baseModule';
+import { BaseModule } from '../../lib/base/baseModule';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp';
 import { AmoServerContext } from '../../core/context';
 import { AmoTasksService } from './amoTasks.service';

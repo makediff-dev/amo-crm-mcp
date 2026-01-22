@@ -6,6 +6,57 @@ export const leadTagSchema = z.object({
   name: z.string().optional()
 });
 
+// Схема для урезанного контакта из with=contacts
+export const contactLinkSchema = z.object({
+  id: z.number(),
+  is_main: z.boolean().optional(),
+  _links: z.object({
+    self: z.object({
+      href: z.string()
+    }).optional()
+  }).optional()
+}).passthrough();
+
+// Схема для полного контакта
+export const contactSchema = z.object({
+  id: z.number(),
+  name: z.string().nullable().optional(),
+  first_name: z.string().nullable().optional(),
+  last_name: z.string().nullable().optional(),
+  responsible_user_id: z.number().optional(),
+  created_by: z.number().optional(),
+  updated_by: z.number().optional(),
+  created_at: z.number().optional(),
+  updated_at: z.number().optional(),
+  custom_fields_values: z
+    .array(
+      z.object({
+        field_id: z.number().optional(),
+        field_name: z.string().optional(),
+        field_type: z.string().optional(),
+        values: z
+          .array(
+            z.object({
+              value: z.unknown(),
+              enum_id: z.number().optional(),
+              enum_code: z.string().nullable().optional()
+            })
+          )
+          .optional()
+      })
+    )
+    .nullable()
+    .optional(),
+  phone: z.array(z.object({
+    value: z.string().optional(),
+    enum_code: z.string().nullable().optional()
+  }).passthrough()).nullable().optional(),
+  email: z.array(z.object({
+    value: z.string().optional(),
+    enum_code: z.string().nullable().optional()
+  }).passthrough()).nullable().optional()
+}).passthrough();
+
 export const leadSchema = z.object({
   id: z.number(),
   name: z.string().nullable().optional(),
@@ -72,17 +123,53 @@ export const singleLeadInputSchema = z.object({
   id: z.number().int().positive()
 });
 
+export const updateLeadInputSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string().min(1).optional(),
+  status_id: z.number().int().positive().optional(),
+  pipeline_id: z.number().int().positive().optional()
+}).refine((data) => {
+  // Если указан status_id, должен быть указан pipeline_id
+  if (data.status_id !== undefined && data.pipeline_id === undefined) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'pipeline_id is required when updating status_id',
+  path: ['pipeline_id']
+});
+
+// Schema for PATCH responses - AmoCRM returns minimal data
+export const leadMinimalSchema = z.object({
+  id: z.number()
+}).passthrough(); // Allow additional fields but only require id
+
+export const singleLeadMinimalApiResponseSchema = z.object({
+  _embedded: z.object({
+    leads: z.array(leadMinimalSchema).min(1)
+  })
+});
+
 export const singleLeadResultSchema = z.object({
   lead: leadSchema
 });
 
+export const updateLeadResultSchema = z.object({
+  lead: leadMinimalSchema
+});
+
 export const leadDetailsResultSchema = z.object({
   lead: leadSchema,
-  nearest_task: taskSchema.pick({ id: true, text: true, complete_till: true }).optional()
+  nearest_task: taskSchema.optional().nullable(),
+  contacts: z.array(contactSchema).optional()
 });
 
 export type Lead = z.infer<typeof leadSchema>;
+export type Contact = z.infer<typeof contactSchema>;
+export type LeadMinimal = z.infer<typeof leadMinimalSchema>;
 export type LeadsListResult = z.infer<typeof leadsListResultSchema>;
 export type ListLeadsInput = z.infer<typeof listLeadsInputSchema>;
 export type SingleLeadInput = z.infer<typeof singleLeadInputSchema>;
+export type UpdateLeadInput = z.infer<typeof updateLeadInputSchema>;
 export type LeadDetailsResult = z.infer<typeof leadDetailsResultSchema>;
+export type UpdateLeadResult = z.infer<typeof updateLeadResultSchema>;

@@ -1,7 +1,7 @@
 import { AmoPipelinesService } from './amoPipelines.service';
 import { pipelinesResultSchema, PipelinesResult } from './amoPipelines.schemas';
 import { Logger } from '../../lib/logger/index';
-import { BaseController, Tool, ToolResult } from '../../lib/baseController';
+import { BaseController, Tool, ToolResult } from '../../lib/base/baseController';
 
 export class AmoPipelinesController extends BaseController {
   constructor(

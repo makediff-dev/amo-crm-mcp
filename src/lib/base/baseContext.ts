@@ -1,6 +1,6 @@
-import { ServerConfig } from './serverConfig';
-import { Logger } from './logger';
-import { SingletonStorage } from './singletonStorage';
+import { ServerConfig } from '../utils/serverConfig';
+import { Logger } from '../logger';
+import { SingletonStorage } from '../utils/singletonStorage';
 
 export class BaseServerContext<TEnv = unknown> {
   readonly startedAt: Date;

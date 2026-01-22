@@ -10,7 +10,7 @@ export class DateFormatter {
 
   constructor(timezone: string, options?: DateFormatterOptions) {
     this.timezone = timezone;
-    this.locale = options?.locale ?? 'ru-RU';
+    this.locale = options?.locale ?? 'en-US';
     this.emptyValue = options?.emptyValue ?? '—';
   }
 

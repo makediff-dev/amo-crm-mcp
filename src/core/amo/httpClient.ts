@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 
 import { EnvConfig } from '../env';
 import { Logger } from '../../lib/logger/index';
-import { ConcurrencyLimiter } from './concurrencyLimiter';
+import { ConcurrencyLimiter } from '../../lib/utils/concurrencyLimiter';
 
 export interface AmoRequestOptions {
   path: string;
@@ -20,7 +20,7 @@ export interface AmoApiClient {
 
 export class AmoHttpClient implements AmoApiClient {
   public readonly limiter: ConcurrencyLimiter;
-  private readonly baseUrl?: string;
+  private readonly baseUrl: string;
   private readonly logger: Logger;
   private readonly env: EnvConfig;
 
@@ -32,10 +32,6 @@ export class AmoHttpClient implements AmoApiClient {
   }
 
   async request<T = unknown>(options: AmoRequestOptions): Promise<T> {
-    if (!this.baseUrl) {
-      throw new Error('AMO_BASE_URL is not configured');
-    }
-
     return this.limiter.run(async () => {
       const headers: Record<string, string> = {
         Accept: 'application/json',

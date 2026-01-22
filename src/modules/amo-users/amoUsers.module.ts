@@ -1,22 +1,22 @@
 import { BaseModule } from '../../lib/base/baseModule';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp';
 import { AmoServerContext } from '../../core/context';
-import { AmoLeadsService } from './amoLeads.service';
-import { AmoLeadsController } from './amoLeads.controller';
+import { AmoUsersService } from './amoUsers.service';
+import { AmoUsersController } from './amoUsers.controller';
 
-export class AmoLeadsModule extends BaseModule<AmoServerContext> {
+export class AmoUsersModule extends BaseModule<AmoServerContext> {
   constructor() {
-    super('amo-leads');
+    super('amo-users');
   }
 
   register = (server: McpServer, context: AmoServerContext) => {
     const service = context.services.getOrCreate(
-      AmoLeadsService,
-      () => new AmoLeadsService(context.amo)
+      AmoUsersService,
+      () => new AmoUsersService(context.amo)
     );
     const controller = context.controllers.getOrCreate(
-      AmoLeadsController,
-      () => new AmoLeadsController(service, context.logger, context.env.APP_TIMEZONE)
+      AmoUsersController,
+      () => new AmoUsersController(service, context.logger)
     );
 
     this.registerTools(server, controller);

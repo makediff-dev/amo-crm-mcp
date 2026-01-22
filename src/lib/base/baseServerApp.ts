@@ -1,5 +1,5 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio';
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport';
 
 import { BaseServerContext } from './baseContext';
@@ -42,7 +42,7 @@ export class BaseServerApp<TContext extends BaseServerContext> {
 
   async start(): Promise<void> {
     await this.server.connect(this.transport);
-    this.context.logger.info('MCP server started (stdio transport).');
+    this.context.logger.info('MCP server started.');
     this.registerSignalHandlers();
   }
 
@@ -51,6 +51,12 @@ export class BaseServerApp<TContext extends BaseServerContext> {
     this.shuttingDown = true;
     this.context.logger.info('Shutting down MCP server...');
     this.removeSignalHandlers();
+    
+    // Flush logger if it has flush method (e.g., FileLogger)
+    if ('flush' in this.context.logger && typeof this.context.logger.flush === 'function') {
+      await (this.context.logger.flush as () => Promise<void>)();
+    }
+    
     await this.server.close();
   }
 

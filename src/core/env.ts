@@ -1,16 +1,5 @@
-import { config as loadEnvFile } from 'dotenv';
 import { z } from 'zod';
-
-// Silence dotenv noisy banner to avoid breaking stdio transports
-const originalLog = console.log;
-const originalWarn = console.warn;
-console.log = () => {};
-console.warn = () => {};
-loadEnvFile();
-console.log = originalLog;
-console.warn = originalWarn;
-
-// Load environment variables from .env into process.env
+import { loadDotenvSilent, parseEnv } from '../lib/utils/envLoader';
 
 const isValidTimezone = (tz: string): boolean => {
   try {
@@ -33,11 +22,11 @@ const envSchema = z.object({
     .int()
     .positive()
     .default(5)
-    .describe('Максимальное число одновременных запросов к AmoCRM API'),
+    .describe('Maximum number of concurrent requests to AmoCRM API'),
   LOG_FILE_PATH: z
     .string()
     .optional()
-    .describe('Путь до файла логов (по умолчанию mcp.log в рабочей директории)'),
+    .describe('Path to log file (defaults to mcp.log in working directory)'),
   AMO_BASE_URL: z
     .string()
     .url()
@@ -52,14 +41,7 @@ const envSchema = z.object({
 export type EnvConfig = z.infer<typeof envSchema>;
 
 export const loadEnvConfig = (): EnvConfig => {
-  const result = envSchema.safeParse(process.env);
-
-  if (!result.success) {
-    const issues = result.error.issues
-      .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
-      .join('; ');
-    throw new Error(`Invalid environment configuration: ${issues}`);
-  }
-
-  return result.data;
+  // Explicitly load .env file before parsing
+  loadDotenvSilent();
+  return parseEnv(envSchema);
 };

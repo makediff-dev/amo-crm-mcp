@@ -66,4 +66,12 @@ export class FileLogger implements Logger {
   error(...args: unknown[]) {
     this.log('error', ...args);
   }
+
+  /**
+   * Wait for all pending writes to complete
+   * Should be called before process exit to ensure all logs are written
+   */
+  async flush(): Promise<void> {
+    await this.writeQueue;
+  }
 }

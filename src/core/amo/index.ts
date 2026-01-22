@@ -1,6 +1,6 @@
 import { EnvConfig } from '../env';
 import { Logger } from '../../lib/logger/index';
-import { ConcurrencyLimiter } from './concurrencyLimiter';
+import { ConcurrencyLimiter } from '../../lib/utils/concurrencyLimiter';
 import { AmoHttpClient, AmoRequestOptions } from './httpClient';
 
 export class AmoService {

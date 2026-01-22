@@ -1,18 +1,23 @@
 import {
   leadsListResultSchema,
   singleLeadInputSchema,
+  updateLeadInputSchema,
+  updateLeadResultSchema,
   leadDetailsResultSchema,
   listLeadsInputSchema,
   LeadsListResult,
   ListLeadsInput,
   Lead,
   SingleLeadInput,
-  LeadDetailsResult
+  UpdateLeadInput,
+  LeadDetailsResult,
+  UpdateLeadResult,
+  Contact
 } from './amoLeads.schemas';
 import { AmoLeadsService } from './amoLeads.service';
 import { Logger } from '../../lib/logger/index';
-import { BaseController, Tool, ToolResult } from '../../lib/baseController';
-import { DateFormatter } from '../../core/dateFormatter';
+import { BaseController, Tool, ToolResult } from '../../lib/base/baseController';
+import { DateFormatter } from '../../lib/utils/dateFormatter';
 
 export class AmoLeadsController extends BaseController {
   private readonly dateFormatter: DateFormatter;
@@ -36,6 +41,31 @@ export class AmoLeadsController extends BaseController {
       : 'ответственный не указан';
     const created = `создано: ${this.dateFormatter.format(lead.created_at)}`;
     return `#${lead.id}: ${name} (${price}; ${pipeline}; ${status}; ${responsible}; ${created})`;
+  }
+
+  private formatContact(contact: Contact): string {
+    const name = contact.name || 
+      [contact.first_name, contact.last_name].filter(Boolean).join(' ') || 
+      `Контакт #${contact.id}`;
+
+    const lines: string[] = [`  ${name}`];
+    
+    // Добавляем кастомные поля
+    if (contact.custom_fields_values && contact.custom_fields_values.length > 0) {
+      contact.custom_fields_values.forEach((field) => {
+        const fieldName = field.field_name ?? `Поле ${field.field_id}`;
+        const values = field.values
+          ?.map((v) => (typeof v.value === 'object' ? JSON.stringify(v.value) : String(v.value)))
+          .join(', ') ?? '—';
+        lines.push(`    ${fieldName}: ${values}`);
+      });
+    }
+    
+    lines.push(`    Ответственный: ${contact.responsible_user_id ?? 'не указан'}`);
+    lines.push(`    Создан: ${this.dateFormatter.format(contact.created_at)}`);
+    lines.push(`    Обновлен: ${this.dateFormatter.format(contact.updated_at)}`);
+
+    return lines.join('\n');
   }
 
   @Tool({
@@ -82,7 +112,7 @@ export class AmoLeadsController extends BaseController {
   private async getLeadById(
     input: SingleLeadInput
   ): Promise<ToolResult<LeadDetailsResult>> {
-    const { lead, nearest_task } = await this.service.getLeadById({ id: input.id });
+    const { lead, nearest_task, contacts } = await this.service.getLeadById({ id: input.id });
 
     const tags =
       lead.tags && lead.tags.length
@@ -105,6 +135,10 @@ export class AmoLeadsController extends BaseController {
       ? `Ближайшая задача: #${nearest_task.id} "${nearest_task.text ?? 'без названия'}", срок: ${this.dateFormatter.format(nearest_task.complete_till)}`
       : 'Ближайших незавершенных задач нет.';
 
+    const contactsText = contacts && contacts.length > 0
+      ? `\n\nКонтакты (${contacts.length}):\n${contacts.map(c => this.formatContact(c)).join('\n')}`
+      : '\n\nКонтактов нет.';
+
     const text = [
       `Сделка #${lead.id}`,
       `Название: ${lead.name ?? 'не указано'}`,
@@ -116,11 +150,43 @@ export class AmoLeadsController extends BaseController {
       `Закрыта: ${this.dateFormatter.format(lead.closed_at ?? undefined)}`,
       tags,
       `Кастомные поля:\n${customFields}`,
-      nearestTaskText
+      nearestTaskText,
+      contactsText
     ].join('\n');
 
     return {
-      structuredContent: { lead, nearest_task },
+      structuredContent: { lead, nearest_task, contacts },
+      content: [
+        {
+          type: 'text',
+          text
+        }
+      ]
+    };
+  }
+
+  @Tool({
+    name: 'update_lead',
+    title: 'Update lead in AmoCRM',
+    description: 'Обновляет сделку в AmoCRM. Позволяет изменить название и передвинуть сделку по этапам.',
+    inputSchema: updateLeadInputSchema,
+    outputSchema: updateLeadResultSchema,
+    errorLogMessage: 'Failed to update lead in AmoCRM',
+    errorLlmMessage: 'Не удалось обновить сделку в AmoCRM.'
+  })
+  private async updateLead(
+    input: UpdateLeadInput
+  ): Promise<ToolResult<UpdateLeadResult>> {
+    const lead = await this.service.updateLead(input);
+
+    // Use only data that AmoCRM actually returns (usually just id)
+    const text = [
+      `Сделка успешно обновлена.`,
+      `ID: #${lead.id}`
+    ].join('\n');
+
+    return {
+      structuredContent: { lead },
       content: [
         {
           type: 'text',

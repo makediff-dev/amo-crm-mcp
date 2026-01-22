@@ -1,10 +1,10 @@
 import os from 'node:os';
 
-import { AmoServerContext } from '../../core/context';
+import { BaseServerContext } from '../../base/baseContext';
 import { HealthSnapshot } from './health.schemas';
 
-export class HealthService {
-  constructor(private readonly context: AmoServerContext) {}
+export class HealthService<TContext extends BaseServerContext = BaseServerContext> {
+  constructor(protected readonly context: TContext) {}
 
   getSnapshot(): HealthSnapshot {
     const memoryUsage = process.memoryUsage();
@@ -46,12 +46,12 @@ export class HealthService {
       .join('/');
 
     return [
-      `${snapshot.server.name}@${snapshot.server.version} is healthy`,
-      `Uptime: ${snapshot.server.uptimeSeconds.toFixed(2)}s`,
-      `Memory: rss ${this.formatBytes(memory.rssBytes)}, heap ${this.formatBytes(memory.heapUsedBytes)}`,
-      `Load avg (1m/5m/15m): ${load}`,
+      `${snapshot.server.name}@${snapshot.server.version} работает нормально`,
+      `Время работы: ${snapshot.server.uptimeSeconds.toFixed(2)}с`,
+      `Память: rss ${this.formatBytes(memory.rssBytes)}, heap ${this.formatBytes(memory.heapUsedBytes)}`,
+      `Нагрузка (1м/5м/15м): ${load}`,
       `PID: ${snapshot.environment.pid} | Node: ${snapshot.environment.nodeVersion}`,
-      `Timestamp: ${snapshot.timestamp}`
+      `Метка времени: ${snapshot.timestamp}`
     ].join('\n');
   }
 

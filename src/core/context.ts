@@ -1,8 +1,8 @@
 import { EnvConfig } from './env';
 import { AmoService } from './amo';
 import { Logger } from '../lib/logger/index';
-import { SingletonStorage } from '../lib/singletonStorage';
-import { BaseServerContext } from '../lib/baseContext';
+import { SingletonStorage } from '../lib/utils/singletonStorage';
+import { BaseServerContext } from '../lib/base/baseContext';
 
 export class AmoServerContext extends BaseServerContext<EnvConfig> {
   constructor(
