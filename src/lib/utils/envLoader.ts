@@ -1,15 +1,31 @@
 import { config as loadEnvFile } from 'dotenv';
 import { z, ZodSchema } from 'zod';
+import { resolve } from 'path';
 
 /**
  * Load .env file silently (without breaking stdio transport by console output)
+ * Tries multiple locations: current working directory, project root (relative to dist)
  */
 export function loadDotenvSilent(): void {
   const originalLog = console.log;
   const originalWarn = console.warn;
   console.log = () => {};
   console.warn = () => {};
-  loadEnvFile();
+
+  // Try current working directory first (for Cursor MCP with cwd set)
+  const cwdResult = loadEnvFile({ path: resolve(process.cwd(), '.env') });
+
+  // If not found or empty, try project root (assuming we're in dist/lib/utils)
+  // Go up from dist/lib/utils to project root: ../../../
+  if (!cwdResult.parsed || Object.keys(cwdResult.parsed).length === 0) {
+    // Calculate project root relative to dist folder
+    // When running from dist/index.js, __dirname will be dist/
+    // So we need to go up one level to get project root
+    const distDir = __dirname.replace(/[/\\]lib[/\\]utils$/, '');
+    const projectRoot = resolve(distDir, '..');
+    loadEnvFile({ path: resolve(projectRoot, '.env') });
+  }
+
   console.log = originalLog;
   console.warn = originalWarn;
 }

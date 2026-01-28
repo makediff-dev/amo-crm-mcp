@@ -23,7 +23,21 @@ export interface LoadServerConfigOptions {
 }
 
 export function loadServerConfig(options?: LoadServerConfigOptions): ServerConfig {
-  const packageJsonPath = options?.packageJsonPath ?? path.resolve(process.cwd(), 'package.json');
+  let packageJsonPath = options?.packageJsonPath;
+
+  if (!packageJsonPath) {
+    // Try current working directory first (for Cursor MCP with cwd set)
+    const cwdPath = path.resolve(process.cwd(), 'package.json');
+    try {
+      readFileSync(cwdPath, 'utf-8');
+      packageJsonPath = cwdPath;
+    } catch {
+      // If not found, try project root (go up from dist/lib/utils to project root)
+      const distDir = __dirname.replace(/[/\\]lib[/\\]utils$/, '');
+      const projectRoot = path.resolve(distDir, '..');
+      packageJsonPath = path.resolve(projectRoot, 'package.json');
+    }
+  }
 
   const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as {
     name?: string;
