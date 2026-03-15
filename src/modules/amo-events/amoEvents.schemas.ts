@@ -252,10 +252,25 @@ export const getEventsInputSchema = z.object({
     .optional()
     .describe('Количество событий на странице (максимум 100)'),
 
-  // Entity filters - simplified to specific entity IDs
-  contact_id: z.number().int().positive().optional().describe('Фильтр по ID контакта'),
-  lead_id: z.number().int().positive().optional().describe('Фильтр по ID лида'),
-  task_id: z.number().int().positive().optional().describe('Фильтр по ID задачи'),
+  // Entity filters — 0 трактуем как "не фильтровать" (LLM иногда передаёт 0)
+  contact_id: z
+    .preprocess(
+      (v) => (v === 0 || v === undefined ? undefined : v),
+      z.number().int().positive().optional()
+    )
+    .describe('Фильтр по ID контакта'),
+  lead_id: z
+    .preprocess(
+      (v) => (v === 0 || v === undefined ? undefined : v),
+      z.number().int().positive().optional()
+    )
+    .describe('Фильтр по ID лида'),
+  task_id: z
+    .preprocess(
+      (v) => (v === 0 || v === undefined ? undefined : v),
+      z.number().int().positive().optional()
+    )
+    .describe('Фильтр по ID задачи'),
 
   // Date filters (Unix timestamps)
   created_at_from: z
